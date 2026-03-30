@@ -10,9 +10,10 @@ from pathlib import Path
 
 
 # Model database with memory requirements (in GB)
+# All model IDs verified via HuggingFace API
 MODEL_DATABASE = [
     {
-        "name": "stabilityai/stable-diffusion-xl-base",
+        "name": "stabilityai/stable-diffusion-xl-base-0.9",
         "type": "text-to-image",
         "min_ram_gb": 8,
         "min_vram_gb": 4,
@@ -20,52 +21,52 @@ MODEL_DATABASE = [
         "recommended": True
     },
     {
-        "name": "stabilityai/sdxl-sublime",
-        "type": "text-to-image",
-        "min_ram_gb": 12,
-        "min_vram_gb": 6,
-        "description": "SDXL Sublime for enhanced quality and speed",
-        "recommended": True
-    },
-    {
-        "name": "genius-ai-video/sora-lite",
+        "name": "ali-vilab/text-to-video-ms-1.7b",
         "type": "text-to-video",
         "min_ram_gb": 16,
         "min_vram_gb": 8,
-        "description": "Lightweight video generation model",
+        "description": "Lightweight text-to-video model (1.7B params), best for low-end hardware",
         "recommended": True
     },
     {
-        "name": "genius-ai-video/video-diffusion-1",
+        "name": "zai-org/CogVideoX-2b",
         "type": "text-to-video",
         "min_ram_gb": 24,
         "min_vram_gb": 12,
-        "description": "Standard video diffusion model",
+        "description": "CogVideoX-2B: Entry-level video generation model, balancing compatibility",
         "recommended": True
     },
     {
-        "name": "genius-ai-video/video-diffusion-2",
+        "name": "zai-org/CogVideoX-5b",
         "type": "text-to-video",
         "min_ram_gb": 32,
         "min_vram_gb": 16,
-        "description": "Advanced video diffusion model",
+        "description": "CogVideoX-5B: Larger model with higher video generation quality",
         "recommended": False
     },
     {
-        "name": "stabilityai/stable-video-diffusion",
+        "name": "Wan-AI/Wan2.1-T2V-1.3B",
         "type": "text-to-video",
-        "min_ram_gb": 32,
-        "min_vram_gb": 16,
-        "description": "Stability AI's stable video diffusion",
-        "recommended": False
+        "min_ram_gb": 20,
+        "min_vram_gb": 10,
+        "description": "Wan2.1-T2V-1.3B: Strong quality-to-VRAM ratio, efficient model",
+        "recommended": True
     },
     {
-        "name": "stabilityai/pixel-diffusion-2",
-        "type": "text-to-video",
-        "min_ram_gb": 48,
-        "min_vram_gb": 24,
-        "description": "Pixel-level video diffusion",
-        "recommended": False
+        "name": "stabilityai/stable-video-diffusion-img2vid-xt",
+        "type": "image-to-video",
+        "min_ram_gb": 24,
+        "min_vram_gb": 10,
+        "description": "Stable Video Diffusion XT: Best image-to-video quality",
+        "recommended": True
+    },
+    {
+        "name": "stabilityai/stable-video-diffusion-img2vid",
+        "type": "image-to-video",
+        "min_ram_gb": 16,
+        "min_vram_gb": 8,
+        "description": "Stable Video Diffusion base: Image-to-video generation",
+        "recommended": True
     },
 ]
 
@@ -115,7 +116,7 @@ def get_model_summary(models, hardware_report):
     
     if not models:
         summary.append("⚠️  No models found that fit your hardware.")
-        summary.append("Consider upgrading your system or using cloud-based generation.")
+        summary.append("Consider upgrading the system or using cloud-based generation.")
         return "\n".join(summary)
     
     summary.append(f"Found {len(models)} compatible model(s):")

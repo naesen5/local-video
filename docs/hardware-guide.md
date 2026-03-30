@@ -6,8 +6,8 @@ Understanding your hardware requirements for local video generation.
 
 | Component | Minimum | Recommended | Optimal |
 |-----------|---------|-------------|---------|
-| RAM | 16 GB | 32 GB | 64 GB+ |
-| VRAM | 8 GB | 16 GB | 32 GB+ |
+| RAM | 16 GB | 24 GB | 32 GB+ |
+| VRAM | 8 GB | 12 GB | 16 GB+ |
 | Storage | 50 GB free | 100 GB free | 200 GB+ |
 | CPU | 4 cores | 8 cores | 16+ cores |
 
@@ -31,13 +31,13 @@ This will output detailed information about:
 ### Apple Silicon (M1, M2, M3)
 
 - **Metal backend**: Use Apple's Metal acceleration
-- **Recommended models**: sora-lite, sdxl-sublime
+- **Recommended models**: ali-vilab/text-to-video-ms-1.7b, stabilityai/stable-video-diffusion-img2vid
 - **Memory sharing**: CPU and GPU share RAM, so system RAM counts as total memory
 
 ### NVIDIA GPUs
 
 - **CUDA support**: Full acceleration
-- **Recommended models**: All models up to video-diffusion-2
+- **Recommended models**: All models up to zai-org/CogVideoX-5b
 - **VRAM requirement**: Check minimum VRAM in model documentation
 
 ### AMD GPUs
@@ -58,7 +58,7 @@ Video generation uses RAM for:
 ### Tips for Low-RAM Systems
 
 1. **Close other applications** before generating
-2. **Use smaller models** (sora-lite instead video-diffusion-2)
+2. **Use smaller models** (ali-vilab/text-to-video-ms-1.7b instead zai-org/CogVideoX-5b)
 3. **Generate shorter videos** (fewer frames)
 4. **Use lower resolution** (256x256 instead 512x512)
 
@@ -68,10 +68,12 @@ Video generation uses RAM for:
 
 | Model | Size | Notes |
 |-------|------|-------|
-| sora-lite | 2-4 GB | Lightweight, good for testing |
-| video-diffusion-1 | 5-8 GB | Standard quality |
-| video-diffusion-2 | 10-15 GB | High quality |
-| stable-video-diffusion | 15-20 GB | Best quality |
+| ali-vilab/text-to-video-ms-1.7b | 3-5 GB | Lightweight, good for testing |
+| zai-org/CogVideoX-2b | 5-8 GB | Standard quality |
+| zai-org/CogVideoX-5b | 10-15 GB | High quality |
+| Wan-AI/Wan2.1-T2V-1.3B | 3-5 GB | Efficient model |
+| stabilityai/stable-video-diffusion-img2vid | 5-8 GB | Image-to-video base |
+| stabilityai/stable-video-diffusion-img2vid-xt | 8-12 GB | Image-to-video XT |
 
 ### Cache Storage
 

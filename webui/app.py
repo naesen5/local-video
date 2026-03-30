@@ -220,11 +220,11 @@ class VideoGenerationUI:
                         model_dd = gr.Dropdown(
                             label="Model",
                             choices=[
-                                "stabilityai/stable-diffusion-xl",
-                                "stabilityai/stable-diffusion-2-1",
-                                "runbsd/stable-diffusion"
+                                "ali-vilab/text-to-video-ms-1.7b",
+                                "zai-org/CogVideoX-2b",
+                                "Wan-AI/Wan2.1-T2V-1.3B"
                             ],
-                            value="stabilityai/stable-diffusion-xl"
+                            value="ali-vilab/text-to-video-ms-1.7b"
                         )
                         num_frames_sl = gr.Slider(
                             label="Number of Frames",
@@ -273,10 +273,10 @@ class VideoGenerationUI:
                         model_img_dd = gr.Dropdown(
                             label="Model",
                             choices=[
-                                "stabilityai/stable-diffusion-xl",
-                                "stabilityai/stable-diffusion-2-1"
+                                "stabilityai/stable-video-diffusion-img2vid",
+                                "stabilityai/stable-video-diffusion-img2vid-xt"
                             ],
-                            value="stabilityai/stable-diffusion-xl"
+                            value="stabilityai/stable-video-diffusion-img2vid"
                         )
                         num_frames_img_sl = gr.Slider(
                             label="Number of Frames",
