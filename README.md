@@ -1,13 +1,17 @@
 # 🎥 Local Video Generation
 
-This repository provides a complete pathway for local video generation using diffusers/transformers. It includes full documentation, Jupyter notebooks, and a web interface for text-to-video and image-to-video operations.
+This repository provides a complete pathway for local video generation. It includes full documentation, Jupyter notebooks, and a web interface for text-to-video and image-to-video operations.
+
+Two backends are supported:
+- **diffusers/transformers** (recommended): Python-native, broad model support, Gradio web UI
+- **stable-diffusion.cpp**: C/C++ backend, lower memory overhead, faster on CPU-only systems
 
 ## 📋 Overview
 
 - **Full markdown documentation** explaining how to get local video generation working
 - **Jupyter notebooks** demonstrating video generation
 - **Instructions effective for non-technical users**
-- **Hardware auto-detection** that recommends appropriate transformers/diffusers versions
+- **Hardware auto-detection** that recommends appropriate models based on your RAM/VRAM
 - **Web interface** powered by Gradio for text-to-video and image-to-video operations
 - **Automatic model selection** based on user's RAM/VRAM constraints
 
@@ -17,7 +21,7 @@ This repository provides a complete pathway for local video generation using dif
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR-REPO/local-video.git
+git clone https://github.com/naesen5/local-video.git
 cd local-video
 
 # Run the installation script
@@ -31,24 +35,37 @@ source venv/bin/activate
 python webui/app.py
 ```
 
-### Option 2: Manual Installation
+### Option 2: Manual Installation (diffusers backend)
 
 ```bash
 # Install system dependencies
 # macOS
 brew install ffmpeg
-
 # Ubuntu/Debian
 sudo apt-get install ffmpeg
-
-# Windows
-# Download from https://ffmpeg.org/download.html
+# Windows: download from https://ffmpeg.org/download.html
 
 # Install Python dependencies
 pip install torch diffusers transformers gradio pillow opencv-python numpy
 
 # Run the web interface
 python webui/app.py
+```
+
+### Option 3: stable-diffusion.cpp backend
+
+```bash
+git clone https://github.com/naesen5/local-video.git
+cd local-video
+bash scripts/install_local_video.sh
+
+# Detect your hardware capabilities
+python3 scripts/detect_hardware.py
+
+# Launch notebook or web UI
+jupyter notebook notebooks/text-to-video.ipynb
+# or
+python3 webui/app.py
 ```
 
 ## 📖 Documentation
@@ -65,8 +82,6 @@ python webui/app.py
 
 ## 🌐 Web Interface
 
-Run the web interface:
-
 ```bash
 python webui/app.py
 ```
@@ -81,19 +96,19 @@ Then open your browser to `http://localhost:7860`
 
 ## 🔧 Hardware Requirements
 
-| RAM/VRAM | Model | Quality | Speed |
-|----------|-------|---------|-------|
-| 4GB+ | text-to-video-1 | Low | Fast |
-| 8GB+ | text-to-video-2 | Medium | Medium |
-| 16GB+ | text-to-video-3 | High | Slow |
+| RAM/VRAM | Recommended Model | Quality | Speed |
+|----------|-------------------|---------|-------|
+| 4GB+ | ali-vilab/text-to-video-ms-1.7b | Low | Fast |
+| 8GB+ | Wan-AI/Wan2.1-T2V-1.3B | Medium | Medium |
+| 16GB+ | zai-org/CogVideoX-2b | High | Slow |
+| 32GB+ | zai-org/CogVideoX-5b | Best | Slow |
 
 ### Minimum Requirements:
 - **RAM**: 4GB (smaller models only, low quality)
 - **VRAM**: 4GB+ (if using GPU)
 
 ### Recommended:
-- **RAM**: 8GB+ or **VRAM**: 4GB+
-- **RAM**: 16GB+ or **VRAM**: 8GB+ (optimal)
+- **RAM**: 16GB+ or **VRAM**: 8GB+
 
 ## 🛠️ Scripts
 
@@ -101,34 +116,21 @@ Then open your browser to `http://localhost:7860`
 - `scripts/recommend_models.py`: Recommend appropriate models based on hardware
 - `scripts/install_local_video.sh`: Unified installation script
 
-## 🌐 Web Interface Files
-
-- `webui/app.py`: Main Gradio application
-- `webui/templates/index.html`: Web interface HTML
-- `webui/static/style.css`: Web interface CSS
-
 ## 📦 Requirements
 
 ### System Dependencies:
-- Python 3.8+
+- Python 3.9+
 - FFmpeg
 
-### Python Dependencies:
-- torch
-- diffusers
-- transformers
-- gradio
-- pillow
-- opencv-python
-- numpy
+### Python Dependencies (diffusers backend):
+- torch, diffusers, transformers, gradio, pillow, opencv-python, numpy
+
+### stable-diffusion.cpp backend:
+- cmake, git, C/C++ compiler (Xcode CLT on macOS, build-essential on Linux)
 
 ## 🤖 About
 
-This repository was created to provide a complete, user-friendly pathway for local video generation after the sunsetting of Sora. It focuses on:
-- Non-technical user accessibility
-- Hardware-aware model recommendations
-- Comprehensive documentation
-- Multiple interfaces (notebooks, web)
+This repository provides a complete, user-friendly pathway for local video generation. It focuses on non-technical user accessibility, hardware-aware model recommendations, comprehensive documentation, and dual-backend support (diffusers + stable-diffusion.cpp).
 
 ## 📄 License
 
@@ -136,10 +138,7 @@ See LICENSE file.
 
 ## 🙋 Contributing
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a branch for your changes
-3. Submit a pull request
+Contributions are welcome! Please fork the repository, create a branch, and submit a pull request.
 
 ---
 

@@ -1,112 +1,122 @@
 # Getting Started with Local Video Generation
 
-This guide will help you get started with local video generation using transformers/diffusers.
+This guide covers both supported backends: **diffusers/transformers** (recommended) and **stable-diffusion.cpp**.
 
 ## Prerequisites
 
 Before we begin, ensure you have:
 - Python 3.9 or newer
 - pip (Python package manager)
+- FFmpeg installed (`brew install ffmpeg` / `apt-get install ffmpeg`)
 - At least 16 GB RAM (more recommended for video generation)
 - Optional: GPU with at least 8 GB VRAM for faster generation
 
-## Installation
+## Option A: diffusers/transformers Backend (Recommended)
 
-### Step 1: Clone the Repository
+### Installation
 
 ```bash
 git clone https://github.com/naesen5/local-video.git
 cd local-video
+
+# Run the unified installer
+chmod +x scripts/install_local_video.sh
+./scripts/install_local_video.sh
+
+# Activate virtual environment
+source venv/bin/activate
 ```
 
-### Step 2: Create a Virtual Environment
+The installer will:
+- Create a Python virtual environment
+- Install torch, diffusers, transformers, gradio, and all dependencies
+- Install FFmpeg if not present
+
+### Quick Start
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### Step 3: Install Dependencies
-
-Run the installation script:
-
-```bash
-bash scripts/install_local_video.sh
-```
-
-This will:
-- Detect your hardware
-- Install appropriate versions of transformers/diffusers
-- Install all required dependencies
-
-### Step 4: Verify Installation
-
-Run the hardware detection script:
-
-```bash
+# Check your hardware
 python3 scripts/detect_hardware.py
+
+# Get model recommendations
+python3 scripts/recommend_models.py
+
+# Launch the web interface
+python webui/app.py
 ```
 
-You should see your hardware information displayed.
+Then open `http://localhost:7860` in your browser.
 
-## First Video Generation
-
-### Option 1: Using Jupyter Notebook
-
-Launch Jupyter:
+### Using Jupyter Notebooks
 
 ```bash
 jupyter notebook notebooks/text-to-video.ipynb
+jupyter notebook notebooks/image-to-video.ipynb
+jupyter notebook notebooks/advanced-usage.ipynb
 ```
 
-Follow the step-by-step instructions in the notebook to generate your first video.
+## Option B: stable-diffusion.cpp Backend
 
-### Option 2: Using the Web Interface
+Best for CPU-only systems or when you need lower memory overhead.
 
-Launch the Gradio web interface:
+### Requirements
+- cmake
+- git
+- C/C++ compiler (Xcode CLT on macOS, `build-essential` on Linux)
+- Minimum: 16 GB RAM, 50 GB free storage
+- Recommended: 24 GB+ RAM, 100 GB+ free storage
+
+### Installation
 
 ```bash
+git clone https://github.com/naesen5/local-video.git
+cd local-video
+bash scripts/install_local_video.sh
+```
+
+This installs:
+- stable-diffusion.cpp (C/C++ backend)
+- Python dependencies (gradio, opencv-python, numpy)
+- All required system packages
+
+### Quick Start
+
+```bash
+# Detect hardware
+python3 scripts/detect_hardware.py
+
+# Launch notebook
+jupyter notebook notebooks/text-to-video.ipynb
+
+# Or web interface
 python3 webui/app.py
 ```
 
-Then open your browser to `http://localhost:7860` and start generating videos.
+## Choosing a Backend
 
-## Understanding What's Installing
+| Factor | diffusers | stable-diffusion.cpp |
+|--------|-----------|----------------------|
+| Model selection | Very broad (HuggingFace) | Limited to GGUF-compatible |
+| CPU performance | Slower | Faster |
+| GPU performance | Excellent | Good |
+| Memory usage | Higher | Lower |
+| Setup complexity | Low (pip) | Higher (build from source) |
 
-### Core Libraries
-
-- **transformers**: Hugging Face's transformer library for AI models
-- **diffusers**: Hugging Face's library for diffusion models (images and videos)
-- **torch/torchvision**: PyTorch for deep learning
-- **ffmpeg**: Video processing tools
-
-### Why These Versions?
-
-The installation script detects your hardware and installs:
-- **CPU-only**: CPU-optimized PyTorch for systems without GPU
-- **GPU-enabled**: CUDA-enabled PyTorch for systems with compatible GPU
-- **Model versions**: Compatible with your available RAM/VRAM
+If you have a GPU with 8GB+ VRAM, use diffusers. If you're CPU-only or have limited RAM, try stable-diffusion.cpp.
 
 ## Troubleshooting
 
-### Out of Memory Errors
+### Out of Memory
+- Reduce video length (fewer frames)
+- Reduce resolution (smaller width/height)
+- Use a smaller model (see `docs/model-selection.md`)
 
-If you get "Out of Memory" errors:
-- Try generating shorter videos
-- Use lower resolution (256x256 instead 512x512)
-- Close other applications to free RAM
-- Consider using a system with more RAM
+### Slow Generation
+- Use fewer frames (8 instead of 16)
+- Use lower resolution (128×128)
+- Enable GPU if available (`torch.cuda.is_available()`)
 
-### Installation Issues
-
-If installation fails:
-1. Check Python version: `python3 --version`
-2. Ensure you have at least 16 GB free disk space
-3. Try installing with verbose output: `pip install -v <package>`
-
-## Next Steps
-
-1. Try the text-to-video notebook
-2. Experiment with different prompts
-3. Learn about model selection in `docs/model-selection.md`
-4. Check hardware requirements in `docs/hardware-guide.md`
+### Installation Fails
+- Ensure Python 3.9+ is installed
+- On macOS: `xcode-select --install` for C/C++ compiler
+- On Linux: `sudo apt-get install build-essential cmake`
