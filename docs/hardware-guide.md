@@ -31,13 +31,13 @@ This will output detailed information about:
 ### Apple Silicon (M1, M2, M3)
 
 - **Metal backend**: Use Apple's Metal acceleration
-- **Recommended models**: odyssey-systems/Wan2.1-T2V-1.3B-bf16, stabilityai/stable-video-diffusion-img2vid
+- **Recommended models**: ali-vilab/text-to-video-ms-1.7b, stabilityai/stable-video-diffusion-img2vid
 - **Memory sharing**: CPU and GPU share RAM, so system RAM counts as total memory
 
 ### NVIDIA GPUs
 
 - **CUDA support**: Full acceleration
-- **Recommended models**: All models up to Wan-AI/Wan2.1-T2V-1.3B
+- **Recommended models**: All models up to zai-org/CogVideoX-5b
 - **VRAM requirement**: Check minimum VRAM in model documentation
 
 ### AMD GPUs
@@ -58,7 +58,7 @@ Video generation uses RAM for:
 ### Tips for Low-RAM Systems
 
 1. **Close other applications** before generating
-2. **Use smaller models** (odyssey-systems/Wan2.1-T2V-1.3B-bf16 instead Wan-AI/Wan2.1-T2V-1.3B)
+2. **Use smaller models** (ali-vilab/text-to-video-ms-1.7b instead zai-org/CogVideoX-5b)
 3. **Generate shorter videos** (fewer frames)
 4. **Use lower resolution** (256x256 instead 512x512)
 
@@ -68,8 +68,10 @@ Video generation uses RAM for:
 
 | Model | Size | Notes |
 |-------|------|-------|
-| odyssey-systems/Wan2.1-T2V-1.3B-bf16 | 3-5 GB | Lightweight, good for testing |
-| Wan-AI/Wan2.1-T2V-1.3B | 5-8 GB | Standard quality |
+| ali-vilab/text-to-video-ms-1.7b | 3-5 GB | Lightweight, good for testing |
+| zai-org/CogVideoX-2b | 5-8 GB | Standard quality |
+| zai-org/CogVideoX-5b | 10-15 GB | High quality |
+| Wan-AI/Wan2.1-T2V-1.3B | 3-5 GB | Efficient model |
 | stabilityai/stable-video-diffusion-img2vid | 5-8 GB | Image-to-video base |
 | stabilityai/stable-video-diffusion-img2vid-xt | 8-12 GB | Image-to-video XT |
 

@@ -1,151 +1,122 @@
 # Getting Started with Local Video Generation
 
-This guide will help you get started with local video generation using stable-diffusion.cpp.
+This guide covers both supported backends: **diffusers/transformers** (recommended) and **stable-diffusion.cpp**.
 
-## What This System Does
+## Prerequisites
 
-This system provides:
-- **Text-to-Video**: Generate videos from text prompts
-- **Image-to-Video**: Convert images to animated videos
-- **Hardware Detection**: Automatically detects your system capabilities
-- **Model Recommendations**: Recommends appropriate models based on your RAM/VRAM
+Before we begin, ensure you have:
+- Python 3.9 or newer
+- pip (Python package manager)
+- FFmpeg installed (`brew install ffmpeg` / `apt-get install ffmpeg`)
+- At least 16 GB RAM (more recommended for video generation)
+- Optional: GPU with at least 8 GB VRAM for faster generation
 
-## Requirements
+## Option A: diffusers/transformers Backend (Recommended)
 
-- **Minimum**: 8 GB RAM, 50 GB free storage
-- **Recommended**: 16 GB+ RAM, 100 GB+ free storage
-- **Optimal**: 32 GB+ RAM, 200 GB+ free storage
-
-## Installation Steps
-
-### Step 1: Clone the Repository
+### Installation
 
 ```bash
-cd ~
 git clone https://github.com/naesen5/local-video.git
 cd local-video
+
+# Run the unified installer
+chmod +x scripts/install_local_video.sh
+./scripts/install_local_video.sh
+
+# Activate virtual environment
+source venv/bin/activate
 ```
 
-### Step 2: Install Dependencies
+The installer will:
+- Create a Python virtual environment
+- Install torch, diffusers, transformers, gradio, and all dependencies
+- Install FFmpeg if not present
+
+### Quick Start
 
 ```bash
-bash scripts/install_local_video.sh
-```
-
-This will install:
-- Python dependencies (gradio, opencv-python, numpy)
-- stable-diffusion.cpp (C/C++ backend)
-- All required system packages
-
-### Step 3: Run Hardware Detection
-
-```bash
+# Check your hardware
 python3 scripts/detect_hardware.py
+
+# Get model recommendations
+python3 scripts/recommend_models.py
+
+# Launch the web interface
+python webui/app.py
 ```
 
-This will show your system capabilities and recommend appropriate models.
+Then open `http://localhost:7860` in your browser.
 
-### Step 4: Choose Your Interface
-
-#### Option A: Jupyter Notebook
-
-Open `notebooks/text-to-video.ipynb` or `notebooks/image-to-video.ipynb` in Jupyter:
+### Using Jupyter Notebooks
 
 ```bash
 jupyter notebook notebooks/text-to-video.ipynb
+jupyter notebook notebooks/image-to-video.ipynb
+jupyter notebook notebooks/advanced-usage.ipynb
 ```
 
-#### Option B: Web Interface
+## Option B: stable-diffusion.cpp Backend
 
-Launch the Gradio web interface:
+Best for CPU-only systems or when you need lower memory overhead.
+
+### Requirements
+- cmake
+- git
+- C/C++ compiler (Xcode CLT on macOS, `build-essential` on Linux)
+- Minimum: 16 GB RAM, 50 GB free storage
+- Recommended: 24 GB+ RAM, 100 GB+ free storage
+
+### Installation
 
 ```bash
+git clone https://github.com/naesen5/local-video.git
+cd local-video
+bash scripts/install_local_video.sh
+```
+
+This installs:
+- stable-diffusion.cpp (C/C++ backend)
+- Python dependencies (gradio, opencv-python, numpy)
+- All required system packages
+
+### Quick Start
+
+```bash
+# Detect hardware
+python3 scripts/detect_hardware.py
+
+# Launch notebook
+jupyter notebook notebooks/text-to-video.ipynb
+
+# Or web interface
 python3 webui/app.py
 ```
 
-Then open your browser to `http://localhost:7860`
+## Choosing a Backend
 
-## First Video Generation
+| Factor | diffusers | stable-diffusion.cpp |
+|--------|-----------|----------------------|
+| Model selection | Very broad (HuggingFace) | Limited to GGUF-compatible |
+| CPU performance | Slower | Faster |
+| GPU performance | Excellent | Good |
+| Memory usage | Higher | Lower |
+| Setup complexity | Low (pip) | Higher (build from source) |
 
-### Text-to-Video
-
-1. Open `notebooks/text-to-video.ipynb` in Jupyter
-2. Find the cell with `prompt = "..."`
-3. Change the text to your prompt (e.g., `"A beautiful sunset in coastal city"`)
-4. Run the cell (Shift+Enter)
-5. Wait for video generation (5-15 minutes depending on hardware)
-
-### Image-to-Video
-
-1. Open `notebooks/image-to-video.ipynb` in Jupyter
-2. Find the cell with the image input
-3. Upload your image
-4. Change the text prompt to describe the motion
-5. Run the cell
-6. Wait for video generation
-
-## Understanding What's What
-
-### Why This Works
-
-Video generation works by:
-1. **Text Encoder**: Converts your text prompt into numbers (embeddings)
-2. **Noise Scheduler**: Starts with random noise
-3. **U-Net Model**: Repeatedly cleans the noise, guided by your text
-4. **Frame Generation**: Creates each video frame step-by-step
-5. **Video Assembly**: Combines frames into a video file
-
-### Why RAM/VRAM Matters
-
-Video generation uses:
-- **Model weights**: 1-10 GB depending on model size
-- **Input/output data**: 1-4 GB
-- **Intermediate computations**: 2-10 GB
-
-More RAM/VRAM = larger models = better quality videos.
-
-### Why Hardware Detection Helps
-
-The detection script:
-- Checks your RAM size
-- Checks your GPU/VRAM
-- Recommends appropriate models
-- Prevents "out of memory" errors
+If you have a GPU with 8GB+ VRAM, use diffusers. If you're CPU-only or have limited RAM, try stable-diffusion.cpp.
 
 ## Troubleshooting
 
-### Out Memory Error
-
-If you see "Out Memory" or "CUDA out memory":
+### Out of Memory
 - Reduce video length (fewer frames)
 - Reduce resolution (smaller width/height)
-- Use a smaller model
+- Use a smaller model (see `docs/model-selection.md`)
 
 ### Slow Generation
+- Use fewer frames (8 instead of 16)
+- Use lower resolution (128×128)
+- Enable GPU if available (`torch.cuda.is_available()`)
 
-If generation is too slow:
-- Use fewer frames (8 instead 16)
-- Use lower resolution (128x128)
-- Enable GPU if available
-
-### Model Not Found
-
-If you see "Model Not Found":
-- Check internet connection
-- First download may take 5-15 minutes
-- Models are cached for reuse
-
-## Next Steps
-
-1. **Watch your video**: Open the saved file in your video player
-2. **Try different prompts**: Change the text and generate again
-3. **Adjust quality**: Change frames/resolution for different results
-4. **Try image-to-video**: Use the image-to-video notebook
-
-## Getting Help
-
-If you see errors:
-1. Check internet connection
-2. Check RAM/VRAM usage
-3. Try a smaller model
-4. Check the documentation in `docs/` folder
+### Installation Fails
+- Ensure Python 3.9+ is installed
+- On macOS: `xcode-select --install` for C/C++ compiler
+- On Linux: `sudo apt-get install build-essential cmake`

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Video Generation</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #333; margin: 0; }
+        .header p { color: #666; }
+        .tab { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .btn { background-color: #4CAF50; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; }
+        .output { margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎥 Local Video Generation</h1>
+        <p>Generate videos from text or images using diffusers/transformers</p>
+    </div>
+    
+    <div class="tab">
+        <h2>Hardware Info</h2>
+        <button class="btn" onclick="getHardwareInfo()">Get Hardware Info</button>
+        <div id="hardware-output" class="output"></div>
+    </div>
+    
+    <div class="tab">
+        <h2>Text-to-Video</h2>
+        <div class="form-group">
+            <label>Prompt</label>
+            <textarea id="prompt" rows="3" placeholder="Enter your text prompt here...">A beautiful sunset in coastal city</textarea>
+        </div>
+        <div class="form-group">
+            <label>Model</label>
+            <select id="model">
+                <option value="stabilityai/stable-diffusion-xl">stabilityai/stable-diffusion-xl</option>
+            </select>
+        </div>
+        <button class="btn" onclick="generateTextToVideo()">Generate Video</button>
+        <div id="text-video-output" class="output"></div>
+        <div id="text-status" class="output"></div>
+    </div>
+    
+    <div class="tab">
+        <h2>Image-to-Video</h2>
+        <div class="form-group">
+            <label>Input Image</label>
+            <input type="file" id="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label>Prompt</label>
+            <textarea id="prompt-img" rows="2" placeholder="Describe the motion...">Peaceful animated scene</textarea>
+        </div>
+        <button class="btn" onclick="generateImageToVideo()">Generate Video</button>
+        <div id="img-video-output" class="output"></div>
+        <div id="img-status" class="output"></div>
+    </div>
+    
+    <div class="tab">
+        <h2>Documentation</h2>
+        <p><strong>Hardware Requirements:</strong></p>
+        <ul>
+            <li><strong>Minimum:</strong> 4GB RAM (smaller models only)</li>
+            <li><strong>Recommended:</strong> 8GB+ RAM or 4GB+ VRAM</li>
+            <li><strong>Optimal:</strong> 16GB+ RAM or 8GB+ VRAM</li>
+        </ul>
+        <p><strong>Tips:</strong> Start with fewer frames, use smaller resolution, enable GPU if available</p>
+    </div>
+    
+    <script>
+        function getHardwareInfo() {
+            fetch('/api/hardware')
+                .then(r => r.json())
+                .then(data => document.getElementById('hardware-output').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>')
+                .catch(e => document.getElementById('hardware-output').textContent = 'Error: ' + e);
+        }
+        function generateTextToVideo() {
+            const prompt = document.getElementById('prompt').value;
+            fetch('/api/text-to-video', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt, model: 'stabilityai/stable-diffusion-xl', numFrames: 16, resolution: 256})
+            })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('text-status').textContent = data.status;
+                    if (data.video_path) {
+                        document.getElementById('text-video-output').innerHTML = '<video controls width="100%"><source src="' + data.video_path + '" type="video/mp4"></video>';
+                    }
+                })
+                .catch(e => document.getElementById('text-status').textContent = 'Error: ' + e);
+        }
+        function generateImageToVideo() {
+            const prompt = document.getElementById('prompt-img').value;
+            const imageInput = document.getElementById('image');
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            formData.append('prompt', prompt);
+            formData.append('model', 'stabilityai/stable-diffusion-xl');
+            formData.append('numFrames', 8);
+            fetch('/api/image-to-video', {method: 'POST', body: formData})
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('img-status').textContent = data.status;
+                    if (data.video_path) {
+                        document.getElementById('img-video-output').innerHTML = '<video controls width="100%"><source src="' + data.video_path + '" type="video/mp4"></video>';
+                    }
+                })
+                .catch(e => document.getElementById('img-status').textContent = 'Error: ' + e);
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gradio Web Interface for Local Video Generation with stable-diffusion.cpp
+Gradio Web Interface for Local Video Generation
 
 This provides a user-friendly web interface for:
 - Text-to-Video generation
@@ -35,16 +35,16 @@ class VideoGenerationUI:
     def load_model(self, model_name):
         """Load a video generation model"""
         try:
-            import sd2cpp
+            from diffusers import DiffusionPipeline
+            from transformers import pipeline
             
             print(f"Loading model: {model_name}")
             
-            if "image" in model_name.lower():
-                self.pipe = sd2cpp.ImageToVideoPipeline(model_name=model_name)
-            else:
-                self.pipe = sd2cpp.VideoGenerationPipeline(model_name=model_name)
-            
-            self.current_model = model_name
+            self.pipe = pipeline(
+                "text-to-video",
+                model=model_name,
+                device=0 if self.device == "cuda" else -1
+            )
             
             return f"✅ Model loaded: {model_name}\nDevice: {self.device}"
         except Exception as e:
@@ -60,7 +60,7 @@ class VideoGenerationUI:
                     return None, status
             
             # Generate video
-            frames = self.pipe.generate(
+            frames = self.pipe(
                 prompt,
                 num_frames=int(num_frames),
                 height=int(height),
@@ -125,12 +125,15 @@ class VideoGenerationUI:
                 pil_image = Image.fromarray(np.array(image))
             
             # Generate video frames
-            frames = self.pipe.generate(
-                pil_image,
-                prompt,
-                num_frames=int(num_frames),
-                num_inference_steps=30,
-            )
+            frames = []
+            for i in range(int(num_frames)):
+                frame_prompt = f"{prompt}, frame {i+1}/{int(num_frames)}"
+                frame = self.pipe(
+                    frame_prompt,
+                    image=pil_image,
+                    num_inference_steps=30,
+                )
+                frames.append(frame)
             
             # Save video
             output_dir = "output"
@@ -178,8 +181,8 @@ class VideoGenerationUI:
             
             info = f"""
 **Hardware Information**
-- RAM: {hw.get('ram', {}).get('total_gb', 'Unknown')} GB
-- VRAM: {len(hw.get('vram', {}).get('gpus', []))} GPU(s)
+- RAM: {hw.get('ram_gb', 'Unknown')} GB
+- VRAM: {hw.get('vram_gb', 'N/A')} GB
 - Device: {self.device}
 - CUDA: {torch.cuda.is_available()}
 
@@ -197,7 +200,7 @@ class VideoGenerationUI:
         
         with gr.Blocks(title="Local Video Generation", theme=gr.themes.Soft()) as demo:
             gr.Markdown("# 🎥 Local Video Generation")
-            gr.Markdown("Generate videos from text or images using stable-diffusion.cpp")
+            gr.Markdown("Generate videos from text or images using diffusers/transformers")
             
             with gr.Tab("Hardware Info"):
                 hardware_btn = gr.Button("Get Hardware Info")
@@ -217,10 +220,11 @@ class VideoGenerationUI:
                         model_dd = gr.Dropdown(
                             label="Model",
                             choices=[
-                                "odyssey-systems/Wan2.1-T2V-1.3B-bf16",
+                                "ali-vilab/text-to-video-ms-1.7b",
+                                "zai-org/CogVideoX-2b",
                                 "Wan-AI/Wan2.1-T2V-1.3B"
                             ],
-                            value="odyssey-systems/Wan2.1-T2V-1.3B-bf16"
+                            value="ali-vilab/text-to-video-ms-1.7b"
                         )
                         num_frames_sl = gr.Slider(
                             label="Number of Frames",
@@ -305,9 +309,9 @@ class VideoGenerationUI:
                 5. Click generate
                 
                 ### Hardware Requirements
-                - **Minimum**: 16 GB RAM
-                - **Recommended**: 24 GB+ RAM or 10 GB+ VRAM
-                - **Optimal**: 32 GB+ RAM or 16 GB+ VRAM
+                - **Minimum**: 4GB RAM (smaller models only)
+                - **Recommended**: 8GB+ RAM or 4GB+ VRAM
+                - **Optimal**: 16GB+ RAM or 8GB+ VRAM
                 
                 ### Tips
                 - Start with fewer frames for testing

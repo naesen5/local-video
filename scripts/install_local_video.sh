@@ -1,99 +1,104 @@
 #!/bin/bash
-set -euo pipefail
+#
+# Unified Installation Script for Local Video Generation
+# This script installs all dependencies for the local video generation system
+#
 
-# Install script for local video generation
-# This script installs all dependencies and stable-diffusion.cpp
+set -e
 
-echo "========================================"
-echo "Local Video Generation Installer"
-echo "========================================"
-echo ""
+echo "========================================="
+echo "Local Video Generation Installation"
+echo "========================================="
 
-# Check OS
-echo "Detected OS: $(uname -s)"
-echo ""
+# Detect operating system
+OS=$(uname -s)
+echo "Detected OS: $OS"
+
+# Detect Python version
+PYTHON_CMD="python3"
+if command -v python3 &> /dev/null; then
+    PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | cut -d' ' -f2)
+    echo "Python version: $PYTHON_VERSION"
+else
+    echo "Error: Python3 not found"
+    exit 1
+fi
+
+# Detect package manager
+if command -v brew &> /dev/null; then
+    PKG_MGR="brew"
+elif command -v apt &> /dev/null; then
+    PKG_MGR="apt"
+elif command -v yum &> /dev/null; then
+    PKG_MGR="yum"
+else
+    PKG_MGR="unknown"
+fi
+echo "Package manager: $PKG_MGR"
 
 # Install system dependencies
-echo "=== Installing system dependencies ==="
-
-if [[ "$(uname -s)" == "Darwin" ]]; then
-    # macOS
-    echo "macOS detected - checking Homebrew..."
-    if ! command -v brew &> /dev/null; then
-        echo "Homebrew not found. Please install Homebrew: https://homebrew.sh/"
-        exit 1
-    fi
-    brew update
-    brew install cmake git ffmpeg
-elif [[ "$(uname -s)" == "Linux" ]]; then
-    # Linux
-    echo "Linux detected - installing system packages..."
-    if command -v apt-get &> /dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y cmake git ffmpeg
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y cmake git ffmpeg
-    elif command -v pacman &> /dev/null; then
-        sudo pacman -Sy cmake git ffmpeg
-    else
-        echo "Unknown package manager. Please install cmake, git, and ffmpeg manually."
-    fi
-else
-    echo "Unknown OS. Please install cmake, git, and ffmpeg manually."
-fi
-
 echo ""
+echo "=== Installing System Dependencies ==="
+
+if [ "$PKG_MGR" = "brew" ]; then
+    echo "Installing with Homebrew..."
+    brew install ffmpeg
+elif [ "$PKG_MGR" = "apt" ]; then
+    echo "Installing with APT..."
+    sudo apt-get update
+    sudo apt-get install -y ffmpeg
+elif [ "$PKG_MGR" = "yum" ]; then
+    echo "Installing with YUM..."
+    sudo yum install -y ffmpeg
+else
+    echo "Warning: Unknown package manager. Please install ffmpeg manually"
+fi
 
 # Install Python dependencies
-echo "=== Installing Python dependencies ==="
-python3 -m pip install --upgrade pip
-python3 -m pip install gradio opencv-python numpy Pillow
-
 echo ""
+echo "=== Installing Python Dependencies ==="
 
-# Clone and build stable-diffusion.cpp
-echo "=== Installing stable-diffusion.cpp ==="
-
-SDCPP_DIR="$HOME/.local/stable-diffusion.cpp"
-
-if [[ -d "$SDCPP_DIR" ]]; then
-    echo "stable-diffusion.cpp already installed. Updating..."
-    cd "$SDCPP_DIR"
-    git pull origin main
-else
-    echo "Cloning stable-diffusion.cpp..."
-    git clone https://github.com/leejet/stable-diffusion.cpp.git "$SDCPP_DIR"
-    cd "$SDCPP_DIR"
+# Create virtual environment if not exists
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    $PYTHON_CMD -m venv venv
 fi
 
-# Build stable-diffusion.cpp
-echo "Building stable-diffusion.cpp (this may take a few minutes)..."
-mkdir -p build
-cd build
-cmake ..
-make -j$(nproc)
+# Activate virtual environment
+source venv/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install required packages
+echo "Installing Python packages..."
+pip install torch diffusers transformers gradio pillow opencv-python numpy
+
+# Verify installation
+echo ""
+echo "=== Verification ==="
+
+# Check Python packages
+echo "Checking Python packages..."
+python3 -c "import torch; print(f'PyTorch: {torch.__version__}')"
+python3 -c "import diffusers; print(f'Diffusers: {diffusers.__version__}')"
+python3 -c "import transformers; print(f'Transformers: {transformers.__version__}')"
+python3 -c "import gradio; print(f'Gradio: {gradio.__version__}')"
+python3 -c "import cv2; print(f'OpenCV: {cv2.__version__}')"
+
+# Check ffmpeg
+echo ""
+echo "Checking ffmpeg..."
+ffmpeg -version | head -n 1
 
 echo ""
-
-# Install Python bindings
-echo "Installing Python bindings..."
-cd "$SDCPP_DIR"
-python3 -m pip install -e .
-
+echo "========================================="
+echo "Installation Complete!"
+echo "========================================="
 echo ""
-
-# Create cache directory
-echo "=== Creating cache directory ==="
-mkdir -p "$HOME/.cache/huggingface"
-echo "Cache directory: $HOME/.cache/huggingface"
-
+echo "To use the system:"
+echo "1. Activate the virtual environment: source venv/bin/activate"
+echo "2. Run the web interface: python webui/app.py"
+echo "3. Or use the notebooks in the notebooks/ folder"
 echo ""
-echo "========================================"
-echo "Installation complete!"
-echo "========================================"
-echo ""
-echo "Next steps:"
-echo "1. Run hardware detection: python3 scripts/detect_hardware.py"
-echo "2. Try text-to-video: jupyter notebook notebooks/text-to-video.ipynb"
-echo "3. Or launch web UI: python3 webui/app.py"
-echo ""
+echo "For more documentation, check the docs/ folder"

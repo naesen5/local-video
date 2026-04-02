@@ -1,125 +1,187 @@
 #!/usr/bin/env python3
 """
 Hardware detection script for local video generation.
-Detects system capabilities and provides recommendations.
+Detects CPU, RAM, VRAM and provides system information.
 """
 
-import json
 import platform
+import subprocess
 import sys
-from pathlib import Path
+import json
 
 
-def detect_system():
-    """Detect system information"""
+def get_system_info():
+    """Get basic system information."""
     return {
         "platform": platform.system(),
         "platform_release": platform.release(),
         "platform_version": platform.version(),
         "architecture": platform.machine(),
         "processor": platform.processor(),
-        "cpu_count": __import__("os").cpu_count(),
+        "python_version": platform.python_version(),
     }
 
 
-def detect_ram():
-    """Detect RAM information"""
-    try:
-        if sys.platform == "darwin":
-            # macOS
-            import subprocess
-            output = subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True).strip()
-            total_gb = int(output) / (1024**3)
-            return {"total_gb": round(total_gb, 1)}
-        elif sys.platform == "linux":
-            # Linux
-            with open("/proc/meminfo", "r") as f:
-                for line in f:
-                    if "MemTotal:" in line:
-                        total_kb = int(line.split()[1])
-                        return {"total_gb": round(total_kb / (1024**2), 1)}
-        elif sys.platform == "win32":
-            # Windows
-            import subprocess
-            output = subprocess.check_output(["wmic", "Memory"], text=True)
-            # Parse output
-            pass
-    except Exception as e:
-        return {"total_gb": 8, "error": str(e)}
+def get_ram_info():
+    """Get RAM information."""
+    system = platform.system()
     
-    return {"total_gb": 8}
+    if system == "Darwin":  # macOS
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            return {
+                "total_gb": round(mem.total / (1024**3), 2),
+                "available_gb": round(mem.available / (1024**3), 2),
+                "used_gb": round(mem.used / (1024**3), 2),
+                "percent": mem.percent
+            }
+        except ImportError:
+            return {"error": "Install psutil: pip install psutil"}
+    
+    elif system == "Linux":
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            return {
+                "total_gb": round(mem.total / (1024**3), 2),
+                "available_gb": round(mem.available / (1024**3), 2),
+                "used_gb": round(mem.used / (1024**3), 2),
+                "percent": mem.percent
+            }
+        except ImportError:
+            return {"error": "Install psutil: pip install psutil"}
+    
+    elif system == "Windows":
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            return {
+                "total_gb": round(mem.total / (1024**3), 2),
+                "available_gb": round(mem.available / (1024**3), 2),
+                "used_gb": round(mem.used / (1024**3), 2),
+                "percent": mem.percent
+            }
+        except ImportError:
+            return {"error": "Install psutil: pip install psutil"}
+    
+    return {"error": "Unknown system or psutil not available"}
 
 
-def detect_vram():
-    """Detect VRAM/GPU information"""
-    gpus = []
+def get_vram_info():
+    """Get VRAM (GPU) information."""
+    system = platform.system()
     
+    # Try to get NVIDIA GPU info
     try:
-        if sys.platform == "darwin":
-            # macOS Metal
-            import subprocess
-            output = subprocess.check_output(["system_profiler", "SPDisplaysDataType"], text=True)
-            # Parse Metal info
-            gpus.append({
-                "name": "Apple Metal",
-                "free_memory_mb": 4096,
-                "total_memory_mb": 8192,
-                "driver": "Metal",
-            })
-        elif sys.platform == "linux" or sys.platform == "darwin":
-            # NVIDIA CUDA via nvidia-smi
-            import subprocess
-            try:
-                output = subprocess.check_output(["nvidia-smi", "--query=gpu,name,memory.total,memory.free,driver_version", "--format=json"], text=True)
-                import json
-                data = json.loads(output)
-                for gpu in data.get("gpu", []):
+        result = subprocess.run(
+            ["nvidia-smi", "--query=gpu,name,memory.total,memory.free,temperature.gpu", "--format=csv,noheader,nounits"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        if result.returncode == 0:
+            lines = result.stdout.strip().split("\n")
+            gpus = []
+            for line in lines:
+                parts = line.split(",")
+                if len(parts) >= 3:
                     gpus.append({
-                        "name": gpu.get("name", "Unknown"),
-                        "free_memory_mb": gpu.get("memory.free", 0),
-                        "total_memory_mb": gpu.get("memory.total", 0),
-                        "driver": gpu.get("driver_version", "Unknown"),
+                        "name": parts[0].strip() if len(parts) > 0 else "Unknown",
+                        "total_memory_mb": int(parts[1].strip()) if len(parts) > 1 else 0,
+                        "free_memory_mb": int(parts[2].strip()) if len(parts) > 2 else 0,
                     })
-            except:
-                pass
-        
-        if not gpus:
-            # No GPU detected
-            gpus.append({
-                "name": "CPU-only",
-                "free_memory_mb": 0,
-                "total_memory_mb": 0,
-                "driver": "None",
-            })
-    except Exception as e:
-        gpus.append({
-            "name": "Unknown",
-            "free_memory_mb": 0,
-            "total_memory_mb": 0,
-            "driver": str(e),
-        })
+            return {"gpus": gpus}
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
     
-    return {"gpus": gpus}
+    # Try macOS Metal info
+    if system == "Darwin":
+        try:
+            result = subprocess.run(
+                ["system_profiler", "SPDisplaysDataType"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            # Parse Metal GPU info
+            if "Metal" in result.stdout:
+                return {"gpus": [{"name": "Apple Metal", "supported": True}]}
+        except Exception:
+            pass
+    
+    return {"gpus": [], "message": "No GPU detected or GPU tools not installed"}
 
 
-def detect_storage():
-    """Detect storage availability"""
-    import shutil
-    home = str(Path.home())
-    stat = shutil.disk_usage(home)
-    free_gb = stat.free / (1024**3)
-    return {"free_gb": round(free_gb, 1), "path": home}
+def get_cpu_info():
+    """Get CPU information."""
+    system = platform.system()
+    
+    if system == "Darwin":
+        try:
+            result = subprocess.run(
+                ["sysctl", "-n", "hw.cpufreq"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            return {"max_frequency_hz": result.stdout.strip() if result.stdout else "Unknown"}
+        except Exception:
+            return {"message": "Could not determine CPU frequency"}
+    
+    elif system == "Linux":
+        try:
+            with open("/proc/cpuinfo", "r") as f:
+                lines = f.readlines()
+                cpu_info = {}
+                for line in lines:
+                    if "cpu MHz" in line:
+                        cpu_info["max_frequency_hz"] = int(line.split(":")[1].strip()) * 1000000
+                return cpu_info
+        except Exception:
+            return {"message": "Could not determine CPU info"}
+    
+    elif system == "Windows":
+        try:
+            result = subprocess.run(
+                ["wmic", "cpu", "get", "MaxClockSpeed"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            return {"max_frequency_hz": result.stdout.strip() if result.stdout else "Unknown"}
+        except Exception:
+            return {"message": "Could not determine CPU info"}
+    
+    return {"message": "Unknown system"}
 
 
-def detect_hardware():
-    """Run all detections and return comprehensive report"""
-    return {
-        "system": detect_system(),
-        "ram": detect_ram(),
-        "vram": detect_vram(),
-        "storage": detect_storage(),
+def get_storage_info():
+    """Get storage information."""
+    try:
+        import psutil
+        disk = psutil.disk_usage("/")
+        return {
+            "total_gb": round(disk.total / (1024**3), 2),
+            "free_gb": round(disk.free / (1024**3), 2),
+            "used_gb": round(disk.used / (1024**3), 2),
+            "percent": disk.percent
+        }
+    except ImportError:
+        return {"error": "Install psutil: pip install psutil"}
+
+
+def get_full_hardware_report():
+    """Get complete hardware report."""
+    report = {
         "timestamp": __import__("datetime").datetime.now().isoformat(),
+        "system": get_system_info(),
+        "cpu": get_cpu_info(),
+        "ram": get_ram_info(),
+        "vram": get_vram_info(),
+        "storage": get_storage_info(),
     }
+    return report
 
 
 if __name__ == "__main__":
@@ -127,23 +189,30 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Hardware detection for local video generation")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument("--short", action="store_true", help="Short output")
     
     args = parser.parse_args()
     
-    hw = detect_hardware()
+    report = get_full_hardware_report()
     
     if args.json:
-        print(json.dumps(hw, indent=2))
+        print(json.dumps(report, indent=2))
+    elif args.short:
+        ram = report["ram"]
+        vram = report["vram"]
+        print(f"RAM: {ram.get('total_gb', 'N/A')} GB total")
+        print(f"VRAM: {len(vram.get('gpus', []))} GPU(s) detected")
     else:
-        print("=" * 60)
+        print("=" * 50)
         print("HARDWARE DETECTION REPORT")
-        print("=" * 60)
-        print(f"Platform: {hw['system']['platform']} {hw['system']['platform_release']}")
-        print(f"CPU: {hw['system']['processor']} ({hw['system']['cpu_count']} cores)")
-        print(f"RAM: {hw['ram']['total_gb']} GB")
-        print(f"Storage: {hw['storage']['free_gb']} GB free")
-        print("")
-        print("GPUs:")
-        for gpu in hw['vram']['gpus']:
-            print(f"  - {gpu['name']} ({gpu['total_memory_mb']} MB total, {gpu['free_memory_mb']} MB free)")
-        print("=" * 60)
+        print("=" * 50)
+        print(f"Platform: {report['system']['platform']} {report['system']['platform_release']}")
+        print(f"Python: {report['system']['python_version']}")
+        print()
+        print(f"RAM: {report['ram'].get('total_gb', 'N/A')} GB total")
+        print(f"VRAM: {len(report['vram'].get('gpus', []))} GPU(s) detected")
+        for gpu in report['vram'].get('gpus', []):
+            print(f"  - {gpu.get('name', 'Unknown')}")
+        print()
+        print(f"Storage: {report['storage'].get('free_gb', 'N/A')} GB free")
+        print("=" * 50)
