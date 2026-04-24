@@ -32,10 +32,10 @@ class TestWebUIImports:
 
     def test_detect_hardware_import(self):
         """Verify detect_hardware module can be imported."""
-        from scripts.detect_hardware import get_system_info
+        from detect_hardware import get_system_info
         assert callable(get_system_info)
 
     def test_recommend_models_import(self):
         """Verify recommend_models module can be imported."""
-        from scripts.recommend_models import recommend_models
+        from recommend_models import recommend_models
         assert callable(recommend_models)
