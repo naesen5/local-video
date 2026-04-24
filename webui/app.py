@@ -131,7 +131,8 @@ class VideoGenerationUI:
             # Generate video frames
             frames = []
             for i in range(int(num_frames)):
-                frame_prompt = f"{prompt}, frame {i + 1}/{int(num_frames)}"
+                total = int(num_frames)
+                frame_prompt = f"{prompt}, frame {i + 1}/{total}"
                 frame = self.pipe(
                     frame_prompt,
                     image=pil_image,
