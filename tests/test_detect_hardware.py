@@ -5,9 +5,10 @@ import os
 import sys
 
 # Add scripts to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
-from detect_hardware import get_system_info, get_ram_info, get_full_hardware_report
+from detect_hardware import (get_full_hardware_report, get_ram_info,
+                             get_system_info)
 
 
 class TestGetSystemInfo:
